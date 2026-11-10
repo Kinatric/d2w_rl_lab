@@ -1,0 +1,9 @@
+{
+  "source_urdf_sha256": "254a6fae570aa4645d6c4f8ba1bed275470937f85202898b2d19848e4f6374ad",
+  "source": "D2W 步态训练 / robot_lab_v12r / d2w_description",
+  "changes": [
+    "relocate mesh paths to ../meshes",
+    "unique collision names"
+  ],
+  "mass_inertia_geometry": "preserved without D2 mass calibration"
+}

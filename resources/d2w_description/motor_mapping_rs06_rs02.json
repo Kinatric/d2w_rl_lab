@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "purpose": "Simulation baseline, not a calibrated motor model or a hardware CAN configuration",
+  "hardware_assignment_source": "User: four rotating wheel joints are RS02; all 12 remaining joints are RS06",
+  "assumptions": {
+    "nominal_bus_voltage_V": 48.0,
+    "external_transmission_ratio": 1.0,
+    "hardware_tested": false,
+    "torque_speed_curve_implemented": false,
+    "thermal_model_implemented": false,
+    "current_limit_model_implemented": false,
+    "actuator": "ImplicitActuatorCfg"
+  },
+  "motors": {
+    "RS06": {
+      "quantity": 12,
+      "joint_names": [
+        "FR_hip_joint",
+        "FR_thigh_joint",
+        "FR_calf_joint",
+        "FL_hip_joint",
+        "FL_thigh_joint",
+        "FL_calf_joint",
+        "RR_hip_joint",
+        "RR_thigh_joint",
+        "RR_calf_joint",
+        "RL_hip_joint",
+        "RL_thigh_joint",
+        "RL_calf_joint"
+      ],
+      "peak_torque_Nm": 36.0,
+      "rated_torque_Nm": 11.0,
+      "no_load_rpm": 480.0,
+      "no_load_speed_rad_s": 50.26548245743668,
+      "sim_velocity_limit_rad_s": 50.0,
+      "internal_gear_ratio": 9.0,
+      "module_mass_kg": 0.621,
+      "kp_sim_initial": 25.0,
+      "kd_sim_initial": 0.5,
+      "manual_pdf_page": 7
+    },
+    "RS02": {
+      "quantity": 4,
+      "joint_names": [
+        "FR_foot_joint",
+        "FL_foot_joint",
+        "RR_foot_joint",
+        "RL_foot_joint"
+      ],
+      "peak_torque_Nm": 17.0,
+      "rated_torque_Nm": 6.0,
+      "no_load_rpm": 410.0,
+      "no_load_speed_rad_s": 42.93509959906051,
+      "sim_velocity_limit_rad_s": 42.93509959906051,
+      "initial_target_velocity_clip_rad_s": 30.0,
+      "internal_gear_ratio": 7.75,
+      "module_mass_kg": 0.405,
+      "kp_sim_initial": 0.0,
+      "kd_sim_initial": 0.5,
+      "manual_pdf_page": 7
+    }
+  },
+  "protocol_warnings": [
+    "RS02 MIT/motion control encoding: torque +/-17 Nm, velocity +/-44 rad/s, Kp 0..500, Kd 0..5.",
+    "RS02 PDF page 38 register table instead lists torque 0..14 Nm and speed +/-33 rad/s. Unresolved; verify actual firmware/mode.",
+    "RS06 MIT/motion control encoding: torque +/-36 Nm, velocity +/-50 rad/s, Kp 0..5000, Kd 0..100.",
+    "RS06 PDF page 37 active-report table says +/-15 rad/s, conflicting with type-2/MIT +/-50. Verify decoding with firmware.",
+    "Encoding endpoints and gain ranges are not recommended controller gains or full-load operating ratings."
+  ],
+  "manuals": [
+    {
+      "filename": "RS02使用说明书260713(1).pdf",
+      "sha256": "e78aaf6d8b67dfbbc39981513d491313c9f12b543346d9e6d2a15ba20937b1dc"
+    },
+    {
+      "filename": "RS06使用说明书260713(1).pdf",
+      "sha256": "28972fe4ddb6e2731856536e16cd95d0d5b1f4556c9cd3389fa0bef5e6c53497"
+    }
+  ]
+}

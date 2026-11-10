@@ -1,0 +1,53 @@
+schema_version: 1
+model: RobStride_02
+protection_mode: instantaneous_envelope
+source: ../motor_mapping_rs06_rs02.json
+output_limits:
+  quantity: 4
+  joint_names:
+  - FR_foot_joint
+  - FL_foot_joint
+  - RR_foot_joint
+  - RL_foot_joint
+  peak_torque_Nm: 17.0
+  rated_torque_Nm: 6.0
+  no_load_rpm: 410.0
+  no_load_speed_rad_s: 42.93509959906051
+  sim_velocity_limit_rad_s: 42.93509959906051
+  # 36 rad/s * 0.0813 m = 2.9268 m/s kinematic ceiling; physical envelope unchanged.
+  initial_target_velocity_clip_rad_s: 36.0
+  internal_gear_ratio: 7.75
+  module_mass_kg: 0.405
+  kp_sim_initial: 0.0
+  # Later D2W gait training P51B / real_pd.json; not identified motor damping.
+  kd_sim_initial: 0.6
+  manual_pdf_page: 7
+assumptions:
+  torque_speed_curve: approximate_digitization_of_manual_48V_graph_with_endpoint_extensions
+  current_thermal_model: false
+  armature: 0.0
+  friction: 0.0
+
+manual_reference:
+  filename: RS02使用说明书260713.pdf
+  sha256: e78aaf6d8b67dfbbc39981513d491313c9f12b543346d9e6d2a15ba20937b1dc
+  pdf_pages: {specifications: 7, curve_48v: 8}
+  measurement_side: integrated_actuator_output
+  rated_voltage_v: 48.0
+  voltage_range_v: [24.0, 60.0]
+  rated_torque_test_speed_rpm: 100.0
+  rated_phase_current_apk: 7.0
+  peak_phase_current_apk: 23.0
+  torque_constant_nm_per_arms: 1.22
+  curve_provenance: approximate_graph_digitization_not_measured_calibration
+  curve_extensions: peak_hold_below_220rpm_and_zero_at_nominal_410rpm_are_model_assumptions
+# [output rpm, available peak N.m], approximate 48 V chart readings.
+# Do not multiply by the 7.75 internal gear ratio again.
+peak_torque_speed_envelope_rpm:
+  - [0.0, 17.0]
+  - [220.0, 17.0]
+  - [250.0, 15.4]
+  - [300.0, 12.1]
+  - [350.0, 7.7]
+  - [400.0, 1.5]
+  - [410.0, 0.0]

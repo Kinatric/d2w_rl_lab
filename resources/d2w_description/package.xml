@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>d2w_description</name>
+  <version>0.0.0</version>
+  <description>D2W V3 robot description and preserved RS06 configuration, with a Unitree-style directory layout.</description>
+  <!-- Replace maintainer details and confirm the owner's license before publishing. -->
+  <maintainer email="maintainer@example.invalid">D2W maintainer</maintainer>
+  <license>LicenseRef-D2W-Unspecified</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
