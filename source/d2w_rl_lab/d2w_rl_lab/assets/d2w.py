@@ -16,6 +16,7 @@ from d2w_rl_lab.assets.d2w_metadata import (
     D2W_WHEEL_JOINT_ORDER,
     D2W_FIXSTAND_JOINT_POSITIONS,
     D2W_RL_DEFAULT_JOINT_POSITIONS,
+    D2W_RL_STANDING_HEIGHT_M,
     get_d2w_asset_identity,
     get_d2w_kinematic_heights,
     get_d2w_rl_reset_kinematic_height,

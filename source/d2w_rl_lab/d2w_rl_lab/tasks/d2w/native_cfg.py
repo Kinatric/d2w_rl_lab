@@ -6,7 +6,7 @@ No legacy checkpoint or old iteration/terrain counter is loaded.
 from copy import deepcopy
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.configclass import configclass
-from d2w_rl_lab.assets.d2w import D2W_CFG, D2W_FIXSTAND_BASE_HEIGHT_M, D2W_LEG_JOINT_ORDER
+from d2w_rl_lab.assets.d2w import D2W_CFG, D2W_RL_STANDING_HEIGHT_M, D2W_LEG_JOINT_ORDER
 from d2w_rl_lab.tasks.mixed.env_cfg import RobotEnvCfg, RobotSceneCfg, TerrainHeightScannerCfg
 from .env_cfg import D2WCurrentEnvCfg, ObservationsCfg, ActionsCfg
 from .native_command import D2WNativeCommand
@@ -53,7 +53,7 @@ class D2WNativeEnvCfg(RobotEnvCfg):
                 setattr(self.rewards, name, deepcopy(term))
         for name in ('joint_acc_l2','joint_power','joint_torques_l2','joint_pos_limits'):
             getattr(self.rewards, name).params['asset_cfg'] = SceneEntityCfg('robot', joint_names=list(D2W_LEG_JOINT_ORDER), preserve_order=True)
-        self.rewards.base_height_l2.params['target_height'] = D2W_FIXSTAND_BASE_HEIGHT_M
+        self.rewards.base_height_l2.params['target_height'] = D2W_RL_STANDING_HEIGHT_M
         self.rewards.base_height_l2.params['asset_cfg'] = SceneEntityCfg('robot', body_names='base_link')
         # Wheel-body translation is not contact slip; upstream foot-speed regularization is inappropriate.
         self.rewards.feet_regulation = None
@@ -72,6 +72,14 @@ class D2WNativeEnvCfg(RobotEnvCfg):
         physics = self.sim.physics
         choices = [physics] + [getattr(physics,k,None) for k in ('newton_mjwarp','isaacsim_physx','default')]
         for choice in choices:
+            # Newton margin inflates collision geometry, unlike a detection-only
+            # skin. A 1 cm wheel margin makes the 81.3 mm wheel roll as 91.3 mm;
+            # wheel + ground margins also add about 2 cm to apparent stand height.
+            # Use the actual URDF surfaces for this D2W task, matching MuJoCo.
+            # Solver contact detection, motor limits and PhysX settings stay intact.
+            shape = getattr(choice, 'default_shape_cfg', None)
+            if shape is not None:
+                shape.margin = 0.0
             solver = getattr(choice, 'solver_cfg', None)
             buckets = getattr(solver, 'body_com_buckets', None)
             if buckets is not None:
@@ -95,6 +103,26 @@ class D2WNativeEnvCfg(RobotEnvCfg):
         refine_stair_coordination(self,start_index=64800)
         from .objectives.stair_sequence import configure as refine_stair_sequence
         refine_stair_sequence(self)
+        from .objectives.stair_traction import configure as refine_stair_traction
+        refine_stair_traction(self)
+        from .objectives.flat_speed_tracking import configure as refine_flat_speed
+        refine_flat_speed(self)
+        from .objectives.lateral_load import configure as refine_lateral_load
+        refine_lateral_load(self)
+        # Match current MuJoCo POLICY / existing real_pd.json: legs 2.0,
+        # wheels 0.6. Preserve nominal asset values and Kp randomization.
+        assert self.scene.robot.actuators['RS06'].damping == 2.0
+        assert self.scene.robot.actuators['RS02'].damping == .6
+        self.events.randomize_actuator_gains.params['damping_distribution_params'] = (1., 1.)
+        # Newton MJWarp uses max(mu_wheel, mu_ground) at equal priority, not
+        # the PhysX 'average' label. Keep original per-shape randomization but
+        # remove the ground=1 floor that otherwise masks low wheel friction.
+        # This covers low-friction individual wheels, not a guaranteed common
+        # low-friction patch under all four wheels in every sampled episode.
+        self.scene.terrain.physics_material.static_friction = .3
+        self.scene.terrain.physics_material.dynamic_friction = .3
+        from .objectives.flat_speed_extension import configure as extend_flat_speed
+        extend_flat_speed(self)
 
     def configure_motor_protection(self):
         # Configuration already selected above; keep the D2W env reset diagnostics hook.
@@ -111,5 +139,5 @@ class D2WNativePlayEnvCfg(D2WNativeEnvCfg):
         self.scene.num_envs = reference.scene.num_envs
         self.scene.terrain = deepcopy(reference.scene.terrain)
         # Retain D2W ranges and sampler. Upstream playback requests 3 m/s on
-        # flat ground, outside this task's +/-2 m/s training distribution.
+        # flat ground, above this task's +2.6 m/s training distribution.
         self.curriculum.terrain_levels = None

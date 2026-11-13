@@ -25,23 +25,23 @@ def stance_cost(env,asset_cfg,component,reference,target_height):
 
 def configure(cfg):
     from isaaclab.managers import RewardTermCfg,SceneEntityCfg
-    from d2w_rl_lab.assets.d2w import D2W_FIXSTAND_BASE_HEIGHT_M
-    from d2w_rl_lab.assets.d2w_metadata import D2W_LEG_JOINT_ORDER,D2W_FIXSTAND_JOINT_POSITIONS
+    from d2w_rl_lab.assets.d2w import D2W_RL_STANDING_HEIGHT_M
+    from d2w_rl_lab.assets.d2w_metadata import D2W_LEG_JOINT_ORDER,D2W_TRAINING_JOINT_POSITIONS
     cfg=parent.configure(cfg)
     # Replace old default-pose objective, retaining action/observation default offsets.
     cfg.rewards.straight_pose=None
-    reference=[D2W_FIXSTAND_JOINT_POSITIONS[n] for n in D2W_LEG_JOINT_ORDER]
+    reference=[D2W_TRAINING_JOINT_POSITIONS[n] for n in D2W_LEG_JOINT_ORDER]
     for name,weight in WEIGHTS.items():
         setattr(cfg.rewards,'stance_'+name,RewardTermCfg(func=stance_cost,weight=weight,params={
             'asset_cfg':SceneEntityCfg('robot',joint_names=list(D2W_LEG_JOINT_ORDER),preserve_order=True),
-            'component':name,'reference':reference,'target_height':D2W_FIXSTAND_BASE_HEIGHT_M}))
+            'component':name,'reference':reference,'target_height':D2W_RL_STANDING_HEIGHT_M}))
     return cfg
 
 def self_test():return {'status':'PASS','parent':parent.self_test(),'refine':refine_test(),'learning_updates':0}
 
 def runtime_preflight(env):
     from .parking_reference import yaw_of
-    from d2w_rl_lab.assets.d2w_metadata import D2W_LEG_JOINT_ORDER,D2W_FIXSTAND_JOINT_POSITIONS
+    from d2w_rl_lab.assets.d2w_metadata import D2W_LEG_JOINT_ORDER,D2W_TRAINING_JOINT_POSITIONS
     r=env.scene['robot'];term=env.command_manager.get_term('base_velocity');c=term.command
     quiet=c.abs().amax(1)<=.02;straight=(c[:,0].abs()>=.2)&(c[:,1:].abs().amax(1)<1e-6)
     f=quiet.float().mean().item();s=straight.float().mean().item();assert .40<f<.65 and .35<s<.60,(f,s)
@@ -55,7 +55,7 @@ def runtime_preflight(env):
         assert cfg.weight==w
         names=[r.joint_names[i] for i in p['asset_cfg'].joint_ids]
         assert names==list(D2W_LEG_JOINT_ORDER),names
-        assert p['reference']==[D2W_FIXSTAND_JOINT_POSITIONS[n] for n in names]
+        assert p['reference']==[D2W_TRAINING_JOINT_POSITIONS[n] for n in names]
         value=cfg.func(env,**p);assert value.shape==(env.num_envs,) and torch.isfinite(value).all()
         details[name]={'weight':w,'reference':p['reference'],'target_height_m':p['target_height'],'joint_names':names}
     return {'status':'PASS','zero_command_fraction':f,'straight_command_fraction':s,

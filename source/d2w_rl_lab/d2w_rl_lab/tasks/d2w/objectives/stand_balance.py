@@ -43,8 +43,8 @@ def standing_balance(env,asset_cfg,wheels_cfg,sensor_cfg,component):
     force=env.scene.sensors[sensor_cfg.name].data.net_forces_w.torch[:,sensor_cfg.body_ids,2]
     load=(force>1.).float().mean(1)
     speed=r.data.root_lin_vel_b.torch[:,:2].norm(dim=1)
-    from d2w_rl_lab.assets.d2w_metadata import D2W_FIXSTAND_JOINT_POSITIONS
-    ref=d.new_tensor([D2W_FIXSTAND_JOINT_POSITIONS[r.joint_names[i]] for i in asset_cfg.joint_ids])
+    from d2w_rl_lab.assets.d2w_metadata import D2W_TRAINING_JOINT_POSITIONS
+    ref=d.new_tensor([D2W_TRAINING_JOINT_POSITIONS[r.joint_names[i]] for i in asset_cfg.joint_ids])
     deviation=(r.data.joint_pos.torch[:,asset_cfg.joint_ids]-ref).reshape(-1,4,3)
     tolerance=deviation.new_tensor([.05,.12,.12])
     scale=deviation.new_tensor([.15,.30,.30])

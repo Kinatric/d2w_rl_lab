@@ -101,13 +101,18 @@ def reward(env,asset_cfg,sensor_cfg,component):
     load=(forces.sum(-2)*up).sum(-1).clamp_min(0.)
     values,memory,events=sequence_step(geometry['center'],geometry['ground'],geometry['bearing'],
         geometry['near_surface'],wall,reference,direction,c,robot.data.root_lin_vel_b.torch,
-        geometry['gate'],valid,None if old is None else old['memory'],env.step_dt)
+        geometry['placement_gate'],valid,None if old is None else old['memory'],env.step_dt)
+    # Only verified front/rear placement rewards use the broader per-wheel
+    # geometry scope. Keep the legacy blockage and approach components on
+    # their original scope, even though the active config removes them.
+    values['blockage']=values['blockage']*geometry['gate']
     values.update(approach_costs(geometry['center'],geometry['bottom'],geometry['ground'],
         env.scene.sensors['height_scanner'].data.ray_hits_w.torch,direction,geometry['bearing'],load,
         wall,reference,c,robot.data.root_lin_vel_b.torch,geometry['gate'] & valid))
     env._d2w_sequence_state=dict(step=step,episode=episode,command=c.clone(),direction=direction.clone(),
         anchor_direction=anchor_direction.clone(),descent_age=descent_age.clone(),
-        values=values,memory=memory,events=events,wall=wall,gate=geometry['gate'].clone())
+        values=values,memory=memory,events=events,wall=wall,gate=geometry['gate'].clone(),
+        placement_gate=geometry['placement_gate'].clone())
     return values[component]
 
 

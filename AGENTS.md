@@ -2,7 +2,7 @@
 
 This is the D2W 16-action training project. Preserve robot joint order, observation layout, motor protection and the teacher/student split. The only registered task is `d2w-mixed-moe-cts`. Read README.md and docs/training_map.md before changing training.
 
-Keep `tests/`, checkpoints, replay datasets, logs, videos, generated runtime assets, caches and secrets local-only. Do not stage or upload files under `tests/`. Keep `/tests/` ignored without exceptions. Preserve source asset meshes and Git LFS. Preserve upstream licenses and copyright notices.
+Keep `tests/`, checkpoints, replay datasets, logs, videos, generated runtime assets, caches and secrets local-only. Do not stage or upload files under `tests/`. Keep `/tests/` ignored without exceptions. Preserve source asset meshes as complete ordinary Git files; do not introduce Git LFS pointers. Preserve upstream licenses and copyright notices.
 
 Use independent workspaces/environments for migration; never modify the source inventory or editable installation of a running training process. Do not install runtime dependencies blindly. Publication does not authorize starting extra learning or hardware deployment.
 

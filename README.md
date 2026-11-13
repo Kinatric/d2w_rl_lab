@@ -25,7 +25,6 @@ Use Python 3.12 and an already configured Isaac Lab 3.0 environment with Newton/
 ```bash
 git clone http://192.168.0.100:3002/huangchao/D2W_rl_lab.git
 cd D2W_rl_lab
-git lfs pull
 # Activate the configured Isaac Lab environment first.
 ./d2w_rl_lab.sh --install
 ./d2w_rl_lab.sh --list
@@ -33,7 +32,7 @@ git lfs pull
 
 Local RSL-RL and task packages install with `--no-deps`; the simulator stack is not automatically replaced. Optional video dependencies use the helper. Editable installation resolves assets relative to the repository root.
 
-Source meshes use Git LFS. Generated USD/MJCF files, asset validation receipts, checkpoints and parking replay data are not distributed through Git. Place the complete validated runtime package in `resources/d2w_runtime/` before training:
+Source meshes are stored as complete ordinary Git files; no `git lfs pull` is needed after cloning. Generated USD/MJCF files, asset validation receipts, checkpoints and parking replay data are not distributed through Git. Place the complete validated runtime package in `resources/d2w_runtime/` before training:
 
 ```bash
 # Replace this example with the actual validated runtime package location.
@@ -90,11 +89,13 @@ Open `http://127.0.0.1:6006` on the TensorBoard host to view rewards, losses, te
 
 ## Sampling and locomotion objectives
 
-Global command bounds are ±2 m/s forward, ±1 m/s lateral and ±2 rad/s yaw, subject to terrain-specific limits. Sampling includes strict zero commands, walking/stopping transitions, straight motion and mixed terrain.
+Global commands cover forward motion up to 2.6 m/s, reverse up to 2 m/s, lateral motion up to 1 m/s in either direction, and yaw rates up to 2 rad/s in either direction. Only flat terrain receives the forward-speed extension; other terrain retains its previous effective limits. Commands above 2 m/s are straight forward only. These are training sampling ranges, not validated hardware operating speeds.
 
-Some flat zero-command intervals last 12–20 seconds and may be truncated by the 25-second episode. Among eligible nonzero, non-focused stair resamples, a 2% branch probes straight `[1,2)` m/s commands. This is not a fraction of total training time and does not contribute to focused curriculum promotion.
+Among eligible nonzero flat resamples, 65% enter focused straight practice. Where the effective bound permits it, 25% of that branch explores 2--2.6 m/s; the rest retains 1.6--2 m/s practice. Drive-to-stop segments cover forward/reverse, lateral and turning commands: 4--6 seconds of motion followed by 12--20 seconds of strict zero command, capped by the remaining episode. These probabilities describe resampling branches, not fractions of total training time. Stair probes retain their separate curriculum.
 
-Objectives cover velocity tracking, standing/parking, terrain-conditioned alignment, support transfer and front/rear wheel placement. Consult resolved run configurations for active terms; a function's presence in a file does not mean it is enabled. See the [training code map](docs/training_map.md).
+RL resets, action/observation offsets and relevant pose rewards share `D2W_TRAINING_JOINT_POSITIONS`; the RL height target is 0.40 m. The FixStand asset calibration pose is unchanged. Active refinements include support-aware stair blockage relief, flat speed tracking and lateral load relief. Calf load integrals are training diagnostics, not measured temperature or certified continuous-duty limits.
+
+See the [training code map](docs/training_map.md). Later configuration layers can replace or disable reward terms; use each run's resolved configuration to determine the active objectives.
 
 ## Playback and export
 

@@ -53,8 +53,15 @@ def active_slip_cost(wheel_slip, active):
 
 
 def progress_state(position, command, world_command, valid, previous, dt):
-    """Signed progress along the current command; paid only past the high-water mark."""
+    """New path progress; a straight command retains its initial world direction.
+
+    Turning/lateral commands keep the original instantaneous direction. This
+    prevents unintended yaw from earning circular-path progress under a straight
+    command. This retains a historical direction in the reward; the actor has
+    no new heading observation and no explicit heading-error penalty is added.
+    """
     direction = world_command / world_command.norm(dim=-1, keepdim=True).clamp_min(1.e-8)
+    straight = (command[:, 0].abs() > 1.e-6) & (command[:, 1:].abs().amax(-1) <= 1.e-6)
     if previous is None:
         changed = torch.ones_like(valid)
         previous_position = position
@@ -65,15 +72,18 @@ def progress_state(position, command, world_command, valid, previous, dt):
         previous_position = torch.where(changed[:, None], position, previous['position'])
         coordinate = torch.where(changed, 0., previous['coordinate'])
         highwater = torch.where(changed, 0., previous['highwater'])
-    # Integrate signed displacement in the instantaneous commanded direction.
-    # The high-water mark prevents net backward/forward oscillations from earning twice.
-    coordinate = coordinate + ((position - previous_position) * direction).sum(-1)
+    anchor = direction if previous is None else torch.where(
+        changed[:, None], direction, previous['anchor'])
+    projection = torch.where(straight[:, None], anchor, direction)
+    # A fixed straight-command axis makes lateral arcs and circles stop paying.
+    # Backtracking cannot repay the same frontier. Reset/recommand starts afresh.
+    coordinate = coordinate + ((position - previous_position) * projection).sum(-1)
     delta = (coordinate - highwater).clamp_min(0.)
     allowance = world_command.norm(dim=-1) * dt
     score = torch.minimum(delta, allowance) / allowance.clamp_min(1.e-8)
     score = torch.where(valid & (~changed) & (allowance > 1.e-8), score, 0.)
     state = dict(command=command.clone(), position=position.clone(), coordinate=coordinate.clone(),
-                 highwater=torch.maximum(highwater, coordinate).clone())
+                 highwater=torch.maximum(highwater, coordinate).clone(), anchor=anchor.clone())
     return score, state
 
 

@@ -29,7 +29,7 @@ import d2w_rl_lab.tasks.d2w.mdp as d2w_mdp
 import d2w_rl_lab.tasks.d2w.mdp_base as mdp
 from d2w_rl_lab.assets.d2w import (
     D2W_CFG,
-    D2W_FIXSTAND_BASE_HEIGHT_M,
+    D2W_RL_STANDING_HEIGHT_M,
     D2W_FIXSTAND_JOINT_POSITIONS,
     D2W_JOINT_NAMES,
     D2W_LEG_JOINT_ORDER,
@@ -40,7 +40,7 @@ JOINT_NAMES = D2W_JOINT_NAMES
 
 BASE_LINK_NAME = 'base_link'
 FOOT_LINK_NAME = ".*_foot"
-BASE_HEIGHT_TARGET = D2W_FIXSTAND_BASE_HEIGHT_M
+BASE_HEIGHT_TARGET = D2W_RL_STANDING_HEIGHT_M
 
 ##
 # Scene definition

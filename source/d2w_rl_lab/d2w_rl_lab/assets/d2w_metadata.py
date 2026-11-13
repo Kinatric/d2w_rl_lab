@@ -19,7 +19,16 @@ D2W_LEG_JOINT_ORDER = ('FL_hip_joint', 'FL_thigh_joint', 'FL_calf_joint', 'FR_hi
 D2W_WHEEL_JOINT_ORDER = ('FL_foot_joint', 'FR_foot_joint', 'RL_foot_joint', 'RR_foot_joint')
 D2W_FIXED_FOOT_JOINTS = ()
 D2W_FIXSTAND_JOINT_POSITIONS = dict(zip(D2W_CANONICAL_JOINT_ORDER, (0., .8, -1.5, 0.) * 4, strict=True))
-D2W_RL_DEFAULT_JOINT_POSITIONS = dict(zip(D2W_CANONICAL_JOINT_ORDER, [0.1, 0.8, -1.5, 0, -0.1, 0.8, -1.5, 0, 0.1, 1.0, -1.5, 0, -0.1, 1.0, -1.5, 0], strict=True))
+# Shared training reference: Go2W leg axes verified against the D2W URDF.
+# RL reset/action/observation offsets and zero-command pose rewards use this
+# same mapping. The separate FixStand calibration pose above is unchanged.
+D2W_TRAINING_JOINT_POSITIONS = dict(zip(D2W_CANONICAL_JOINT_ORDER, [
+    -0.1, 0.8, -1.5, 0.0, 0.1, 0.8, -1.5, 0.0,
+    -0.1, 0.8, -1.5, 0.0, 0.1, 0.8, -1.5, 0.0,
+], strict=True))
+D2W_RL_DEFAULT_JOINT_POSITIONS = D2W_TRAINING_JOINT_POSITIONS
+# Explicit RL reward target; independent of FixStand FK and spawn clearance.
+D2W_RL_STANDING_HEIGHT_M = 0.40
 # PD baseline from D2W gait training P51B (2026-10-22), not a motor identification.
 D2W_LEG_KP = 30.0
 D2W_LEG_KD = 2.0

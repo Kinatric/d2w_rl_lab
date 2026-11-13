@@ -11,7 +11,9 @@ class ParkingReference:
         self.yaw=torch.zeros(n,device=device)
 
     def update(self,ids,commands,position,quaternion,reset=False):
-        quiet=commands.abs().amax(dim=1)<=.02
+        # Match stationary_hold.zero_mask exactly. A small requested motion
+        # must exit parking so the next true stop captures its own reference.
+        quiet=commands.abs().amax(dim=1)<1.e-6
         capture=quiet & (~self.active[ids] | reset)
         selected=ids[capture]
         self.xy[selected]=position[capture,:2]

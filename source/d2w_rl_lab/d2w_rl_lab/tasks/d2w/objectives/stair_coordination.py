@@ -76,8 +76,12 @@ def reward(env, asset_cfg, sensor_cfg):
     symmetric=(counts[0]>=2)&(counts[1]>=2)&((strips[0]-strips[1]).abs()<.06)
     healthy=(-robot.data.projected_gravity_b.torch[:,2]>.8)&(~env.termination_manager.terminated)
     healthy &= robot.data.root_ang_vel_b.torch[:,:2].norm(dim=-1)<2.
-    gate=stairs&(slope>.03)&fit_valid&symmetric&geometry_valid&healthy
-    gate &= (command[:,0]>.1)&(command[:,1].abs()<.1)&(command[:,2].abs()<.2)
+    # A valid single-wheel placement may occur on a diagonal approach where
+    # left and right scan strips see different treads. Keep that distinction
+    # separate from the original side-transfer diagnostic and curriculum.
+    placement_gate=stairs&(slope>.03)&fit_valid&geometry_valid&healthy
+    placement_gate &= (command[:,0]>.1)&(command[:,1].abs()<.1)&(command[:,2].abs()<.2)
+    gate=placement_gate&symmetric
     frontier_center=center[:,:2].clone();frontier_ground=ground[:,:2].clone()
     events=torch.zeros(n,2,dtype=torch.bool,device=device)
     direction=command.new_zeros(n,3);direction[:,0]=1.;direction=quat_apply(robot.data.root_quat_w.torch,direction)
@@ -100,7 +104,8 @@ def reward(env, asset_cfg, sensor_cfg):
     cost,memory=transfer_repeat_cost(events,robot.data.root_pos_w.torch[:,:2],gate,valid,None if old is None else old['memory'],env.step_dt)
     env._d2w_transfer_state=dict(step=step,episode=episode,command=command.clone(),frontier_center=frontier_center.clone(),frontier_ground=frontier_ground.clone(),memory=memory,cost=cost.clone(),events=events.clone(),gate=gate.clone(),ascent=slope>.03)
     env._d2w_transfer_state.update(center=center.clone(),ground=ground.clone(),bearing=bearing.clone(),
-        near_surface=(clearance.abs()<.05),bottom=(center[:,:,2]-extent).clone(),stairs=stairs.clone(),slope=slope.clone())
+        near_surface=(clearance.abs()<.05),bottom=(center[:,:,2]-extent).clone(),stairs=stairs.clone(),slope=slope.clone(),
+        placement_gate=placement_gate.clone(),symmetric=symmetric.clone())
     sampler=env.command_manager.get_term('base_velocity')
     if hasattr(sampler,'observe_ascent'):
         sampler.observe_ascent(robot,stairs,slope,valid)
@@ -108,9 +113,16 @@ def reward(env, asset_cfg, sensor_cfg):
 
 
 def tracking_cost(command, velocity, gyro):
+    """Smooth robust error with the original local curvature and useful tails.
+
+    The unique minimum remains zero lateral/yaw-rate tracking error. Unlike
+    the former bounded square, large errors retain a bounded nonzero slope.
+    This is an instantaneous velocity cost, not historical path correction.
+    """
     y=((velocity[:,1]-command[:,1])/.15).square()
     w=((gyro[:,2]-command[:,2])/.10).square()
-    return .5*(y/(1+y)+w/(1+w))
+    # Rationalized sqrt(1+x)-1 avoids cancellation near the optimum.
+    return y/(torch.sqrt(1.+y)+1.) + w/(torch.sqrt(1.+w)+1.)
 
 
 def stair_tracking(env,asset_cfg):

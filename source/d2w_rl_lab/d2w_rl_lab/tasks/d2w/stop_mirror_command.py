@@ -1,4 +1,9 @@
-"""A subset of flat straight samples explicitly transitions into a sustained stop."""
+"""A subset of moving flat samples continuously transitions into a longer stop.
+
+Preserve sampled command directions/ranges and all already-zero samples. Motion
+lasts 4--6 s, then strict zero lasts 12--20 s, capped by the remaining episode.
+No policy history, action delay, or physical state is reset at the transition.
+"""
 import torch
 from .native_command import D2WNativeCommand
 from .objectives.consistent_gate import designated_flat
@@ -33,23 +38,20 @@ class StopMirrorCommand(D2WNativeCommand):
             self.quiet_age[due_ids] = 0.
             remaining = ((self._env.max_episode_length - self._env.episode_length_buf[due_ids])
                          * self._env.step_dt).clamp_min(self._env.step_dt)
-            self.time_left[due_ids] = torch.minimum(8. + 4. * torch.rand(len(due_ids), device=self.device), remaining)
+            self.time_left[due_ids] = torch.minimum(12. + 8. * torch.rand(len(due_ids), device=self.device), remaining)
             self.parking.update(due_ids, self.command[due_ids], self.robot.data.root_pos_w.torch[due_ids],
                                 self.robot.data.root_quat_w.torch[due_ids], False)
             self.paired_stop_events[due_ids] += 1
         c = self.command[ids]
         remaining = (self._env.max_episode_length - self._env.episode_length_buf[ids]) * self._env.step_dt
-        eligible = flat & ~due & (c[:, 0].abs() >= 1.6) & (c[:, 1:].abs().amax(1) < 1.e-6) & (remaining >= 12.)
+        # Eighteen seconds reserves the longest 6 s drive plus a 12 s hold.
+        # Include reverse, lateral and turn commands, while retaining whatever
+        # command the parent sampler chose and never replacing a zero sample.
+        eligible = flat & ~due & ~zero_mask(c) & (remaining >= 18.)
         selected = eligible & (torch.rand(len(ids), device=self.device) < .5)
         selected_ids = ids[selected]
         self.stop_pending[selected_ids] = True
         self.time_left[selected_ids] = 4. + 2. * torch.rand(len(selected_ids), device=self.device)
 
-    def _update_command(self):
-        previous_age = self.quiet_age.clone() if hasattr(self, 'quiet_age') else None
-        super()._update_command()
-        if previous_age is not None:
-            # The hold penalty uses strict zero; a slow nonzero command must
-            # not pre-age its two-second braking blend.
-            self.quiet_age = torch.where(zero_mask(self.command), previous_age + self._env.step_dt,
-                                         torch.zeros_like(previous_age))
+    # D2WNativeCommand now owns the same strict-zero quiet_age update. Keeping
+    # one implementation avoids applying different stop boundaries twice.

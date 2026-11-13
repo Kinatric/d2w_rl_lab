@@ -12,7 +12,7 @@ def flat_gate(env):
 
 def unified_reference(env,asset_cfg,command_name,stand_still_scale,command_threshold,kind,velocity_threshold=None):
     from d2w_rl_lab.tasks.d2w.mdp_base import rewards
-    from d2w_rl_lab.assets.d2w_metadata import D2W_FIXSTAND_JOINT_POSITIONS
+    from d2w_rl_lab.assets.d2w_metadata import D2W_TRAINING_JOINT_POSITIONS
     c=env.command_manager.get_command(command_name);r=env.scene[asset_cfg.name]
     quiet=(1-smooth(c[:,:2].norm(dim=1),.02,.08))*(1-smooth(c[:,2].abs(),.02,.08))
     straight=(1-smooth(c[:,1].abs(),.02,.1))*(1-smooth(c[:,2].abs(),.02,.15))*smooth(c[:,0].abs(),.05,.2)
@@ -20,7 +20,7 @@ def unified_reference(env,asset_cfg,command_name,stand_still_scale,command_thres
     kw=dict(asset_cfg=asset_cfg,command_name=command_name,stand_still_scale=stand_still_scale,command_threshold=command_threshold)
     if kind=='hip':old=rewards.hip_pos_penalty_l1(env,**kw)
     else:old=rewards.joint_pos_penalty_l1(env,velocity_threshold=velocity_threshold,**kw)
-    ref=r.data.joint_pos.torch.new_tensor([D2W_FIXSTAND_JOINT_POSITIONS[r.joint_names[i]] for i in asset_cfg.joint_ids])
+    ref=r.data.joint_pos.torch.new_tensor([D2W_TRAINING_JOINT_POSITIONS[r.joint_names[i]] for i in asset_cfg.joint_ids])
     fixed=(r.data.joint_pos.torch[:,asset_cfg.joint_ids]-ref).abs().sum(1)
     return (1-g)*old+g*fixed
 

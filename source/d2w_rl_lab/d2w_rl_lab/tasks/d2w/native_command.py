@@ -67,5 +67,6 @@ class D2WNativeCommand(RLGymVelCommand):
             return
         ids = self._ids(None)
         self.parking.update(ids, self.command, self.robot.data.root_pos_w.torch, self.robot.data.root_quat_w.torch)
-        quiet = self.command.abs().amax(1) <= .02
+        # Use the same strict-zero boundary as hold rewards and parking anchors.
+        quiet = self.command.abs().amax(1) < 1.e-6
         self.quiet_age = torch.where(quiet, self.quiet_age+self._env.step_dt, torch.zeros_like(self.quiet_age))
