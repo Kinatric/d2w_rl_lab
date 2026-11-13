@@ -7,4 +7,5 @@ install(DIRECTORY config launch meshes urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(FILES COPYING-HARDWARE COPYING-SOFTWARE LICENSING.md DESTINATION share/${PROJECT_NAME})
 ament_package()

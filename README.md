@@ -112,3 +112,7 @@ This repository provides training and native playback. The independently maintai
 ## Licenses and local files
 
 See [LICENSE](LICENSE) and `docs/licenses/`. Validation stays under ignored `tests/`. Models, replay datasets, logs, videos, caches, environments, credentials and generated runtime assets are excluded from commits.
+
+## License
+
+Kinatric-owned software and firmware contributions are licensed under **GPL-3.0-or-later**. Kinatric-owned robot hardware designs and associated manufacturing documentation are licensed under **CERN-OHL-W-2.0**, subject to the file coverage in [LICENSING.md](LICENSING.md). Third-party material retains its original licenses and attribution; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Both full license texts are included in [LICENSES/](LICENSES/). Kinatric-owned trained policy weights are also GPL-3.0-or-later; see the coverage table and provenance requirements.

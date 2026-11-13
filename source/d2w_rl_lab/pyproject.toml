@@ -7,7 +7,7 @@ name = "d2w_rl_lab"
 version = "0.1.7"
 description = "D2W wheel-legged locomotion training environments for Isaac Lab."
 requires-python = ">=3.12"
-license = { text = "MIT" }
+license = { text = "GPL-3.0-or-later AND MIT AND Apache-2.0 AND BSD-3-Clause" }
 authors = [
     { name = "Tianyang Wu" },
 ]
@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
@@ -41,3 +41,6 @@ mujoco = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["d2w_rl_lab*"]
+
+[tool.setuptools]
+license-files = ["COPYING", "LICENSE*", "LICENSES/*.txt", "LICENSING.md", "THIRD_PARTY_NOTICES.md"]
