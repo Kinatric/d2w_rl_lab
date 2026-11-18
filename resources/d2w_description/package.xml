@@ -3,9 +3,10 @@
   <name>d2w_description</name>
   <version>0.0.0</version>
   <description>D2W V3 robot description and preserved RS06 configuration, with a Unitree-style directory layout.</description>
-  <!-- Replace maintainer details and confirm the owner's license before publishing. -->
+  <!-- See LICENSING.md for the hardware/software split and upstream exceptions. -->
   <maintainer email="maintainer@example.invalid">D2W maintainer</maintainer>
-  <license>LicenseRef-D2W-Unspecified</license>
+  <license>CERN-OHL-W-2.0</license>
+  <license>GPL-3.0-or-later</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
